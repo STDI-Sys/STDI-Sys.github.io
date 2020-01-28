@@ -1,0 +1,162 @@
+<html>
+  <head>
+	  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>STIndex</title>
+		<link href="toc/style/github-bf51422f4bb36427d391e4b75a1daa083c2d840e.css" media="all" rel="stylesheet" type="text/css"/>
+		<link href="toc/style/github2-d731afd4f624c99a4b19ad69f3083cd6d02b81d5.css" media="all" rel="stylesheet" type="text/css"/>
+		<link href="toc/css/zTreeStyle/zTreeStyle.css" media="all" rel="stylesheet" type="text/css"/>
+	  <style>
+		pre {
+		    counter-reset: line-numbering;
+		    border: solid 1px #d9d9d9;
+		    border-radius: 0;
+		    background: #fff;
+		    padding: 0;
+		    line-height: 23px;
+		    margin-bottom: 30px;
+		    white-space: pre;
+		    overflow-x: auto;
+		    word-break: inherit;
+		    word-wrap: inherit;
+		}
+
+		pre a::before {
+		  content: counter(line-numbering);
+		  counter-increment: line-numbering;
+		  padding-right: 1em; /* space after numbers */
+		  width: 25px;
+		  text-align: right;
+		  opacity: 0.7;
+		  display: inline-block;
+		  color: #aaa;
+		  background: #eee;
+		  margin-right: 16px;
+		  padding: 2px 10px;
+		  font-size: 13px;
+		  -webkit-touch-callout: none;
+		  -webkit-user-select: none;
+		  -khtml-user-select: none;
+		  -moz-user-select: none;
+		  -ms-user-select: none;
+		  user-select: none;
+		}
+
+		pre a:first-of-type::before {
+		  padding-top: 10px;
+		}
+
+		pre a:last-of-type::before {
+		  padding-bottom: 10px;
+		}
+
+		pre a:only-of-type::before {
+		  padding: 10px;
+		}
+
+		.highlight { background-color: #ffffcc } /* RIGHT */
+		</style>
+  </head>
+  <body>
+	  <div>
+				<div style='width:25%;'>
+						<ul id="tree" class="ztree" style='width:100%'>
+
+						</ul>
+				</div>
+        <div id='readme' style='width:70%;margin-left:20%;'>
+          	<article class='markdown-body'>
+            	<h1 id="1-stindex-">1. STIndex 概览</h1>
+<h2 id="1-1-">1.1 简介</h2>
+<p>STIndex提供了一种开箱即用的时空索引. 目前支持基于<strong>时间点</strong>及<strong>时间周期</strong>的时间索引. 其空间索引依赖于GeoIndex, 
+GeoIndex提供了基于<a href="http://webpages.sou.edu/~sahrk/sqspc/pubs/gdggs03.pdf">离散全球网格</a>(discrete global grid, DGG)的空间索引, 底层由空间填充曲线(Space-filling curve, SFC)及<a href="https://uber.github.io/h3/#/">H3地理空间索引系统</a>(H3 geospatial indexing system)提供支持. GeoIndex重点关注二维的平面空间索引(即对经纬度的索引), 因为几乎没有日常应用会关注高程值. 虽然H3只支持平面索引, 但是GeoIndex实现的底层空间填充曲线支持任意维度的索引. GeoIndex主要提供了以下功能:</p>
+<ul>
+<li>给定一个经纬度点, 获取指定索引类型及分辨率下的索引值;</li>
+<li>给定索引值及其对应的索引类型和分辨率, 获取其对应的经纬度边界范围, 或其中心点;</li>
+<li>给定一个经纬度边界范围, 获取其对应的索引值区间;</li>
+<li>给定索引值及其对应的索引类型和分辨率, 获取其父层级的索引值;</li>
+<li>给定索引值及其对应的索引类型和分辨率, 获取其子层级的索引值区间;</li>
+<li>给定索引值及其对应的索引类型和分辨率, 获取其邻居空间单元的索引值.</li>
+</ul>
+<p>此外, 值的说明的是, GeoIndex本身由Java语言实现了一个完整的、支持任意维度索引的空间填充曲线库, 而其对H3的支持只是封装了Uber官方给出的<a href="https://github.com/uber/h3-java">Java Binding</a>.</p>
+<h2 id="1-2-">1.2 用例</h2>
+<p>Updating...</p>
+<h1 id="2-">2. 时空索引</h1>
+<h2 id="2-1-">2.1 基本概念</h2>
+<p>Updating...</p>
+<h2 id="2-2-">2.2 时间索引</h2>
+<p>Updating...</p>
+<h2 id="2-3-">2.3 空间索引</h2>
+<h3 id="2-3-1-">2.3.1 空间填充曲线</h3>
+<p>空间填充曲线是一种基于矩形网格的、递归四叉剖分的空间索引. 理论上, 空间填充曲线可以对任意维的数据进行索引, STIndex所实现的空间填充曲线库本身也支持任意维度的索引. 但是直接将时间或高程等维度用空间填充曲线进行索引需要额外的研究, 因此STIndex只利用空间填充曲线对经纬度进行索引. 目前, STIndex已经完整实现了Z-Order曲线及Hilbert曲线, 后续将添加对XZ-Order曲线的支持.</p>
+<p>Z-Order曲线及Hilbert曲线的剖分方式如图1所示. 现有的研究表明, Hilbert曲线的性能优于Z-Order曲线, Z-Order曲线的优势是实现简单.</p>
+<p><table></p>
+<p><tr></p>
+<p><td style="width: 350px;"><img src="./img/zorder.png"></td>
+</tr></p>
+<p><tr></p>
+<p><td style="width: 350px;"><img src="./img/hilbert.png"></td>
+</tr>
+</table></p>
+<p><table style="height: 57px; width: 100%;" width="100%"></p>
+<p><tr></p>
+<p><td style="width: 601.016px;"><span style="font-size: 10pt;"><i><span style="font-weight: 400;">图1. Z-Order曲线(上), Hilbert曲线(下)</span></i></span></td> 
+</tr></p>
+<table>
+
+<h3 id="2-3-2-h3">2.3.2 H3</h3>
+<p><a href="https://github.com/uber/h3">H3</a>是Uber开源的一个离散全球网格索引系统. 它将地球投影到一个二十面体(icosahedron)上. H3网格由布满地球的122(122 = 4 * 20 + (3 * 20) / 2 + (3 * 20) / 5)个基本单元(base cell)组成, 每个面包含10个单元, 其中4个单元仅属于一个面, 3个单元跨越两个面, 3个单元跨越5个面.</p>
+<p><table></p>
+<p><tr></p>
+<p><td style="width: 196.016px;"><img src="./img/1.png"></td> <td style="width: 196.016px;"><img src="./img/2.png"></td> <td style="width: 196.016px;"><img src="./img/3.png"></td>
+</tr>
+</table></p>
+<p><table style="height: 57px; width: 100%;" width="100%"></p>
+<p><tr></p>
+<p><td style="width: 601.016px;"><span style="font-size: 10pt;"><i><span style="font-weight: 400;">图1. 正二十面体(左), 将地球投影到正二十面体(中), 每个面的基本单元(右)</span></i></span></td> 
+</tr></p>
+<p><table>
+由于单纯使用正六边形无法铺满整个地球, 因此H3在二十面体的每个顶点铺设了一个正五边形, 即图1(右)中落在每个面顶点处的正三角形. 这些顶点是使用<a href="https://exhibits.stanford.edu/bucky/about/about-r-buckminster-fuller">R. Buckminster Fuller</a>的球形二十面体方向进行定位的, 所有顶点都放置在水中.<br>
+<br>
+H3使用7孔径(7 aperture)的方法对六边形进行层次划分, 在每一层中利用<a href="http://webpages.sou.edu/~sahrk/sqspc/pubs/autocarto14.pdf">中心位置索引</a>(Central Place Indexing)排列对7个孔径进行编号.</p>
+<p><table></p>
+<p><tr></p>
+<p><td style="width: 196.016px;"><img src="./img/4.png"></td> <td style="width: 392.032px;"><img src="./img/5.png"></td>
+</tr>
+</table></p>
+<p><table style="height: 57px; width: 100%;" width="100%"></p>
+<p><tr></p>
+<p><td style="width: 601.016px;"><span style="font-size: 10pt;"><i><span style="font-weight: 400;">图2. 7孔径划分法(左), 中心位置索引(右)</span></i></span></td> 
+</tr></p>
+<p><table>
+H3索引编码由64位的整型表示, 这里仅讲述单元索引的排列, 具体可见<a href="https://uber.github.io/h3/#/documentation/core-library/h3-index-representations">H3文档</a>. H3单元索引的编码值按如下顺序装入一个64位整数的低63位中:</p>
+<ul>
+<li>4位表示索引模式, 在单元索引中为1,</li>
+<li>3位保留,</li>
+<li>4位表示0-15的单元分辨率,</li>
+<li>7位表示0-121的基本单元,</li>
+<li>最后45位每3位用于表示从分辨率1到15的中心位置索引值, 未使用的位被置为1.</li>
+</ul>
+<h1 id="3-api-">3. API 参考</h1>
+<p>Updating...</p>
+
+          	</article>
+        </div>
+		</div>
+  </body>
+</html>
+<script type="text/javascript" src="toc/js/jquery-1.4.4.min.js"></script>
+<script type="text/javascript" src="toc/js/jquery.ztree.all-3.5.min.js"></script>
+<script type="text/javascript" src="toc/js/ztree_toc.js"></script>
+<script type="text/javascript" src="toc_conf.js"></script>
+
+<SCRIPT type="text/javascript" >
+<!--
+$(document).ready(function(){
+    var css_conf = eval(markdown_panel_style);
+    $('#readme').css(css_conf)
+    
+    var conf = eval(jquery_ztree_toc_opts);
+		$('#tree').ztree_toc(conf);
+});
+//-->
+</SCRIPT>
