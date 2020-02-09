@@ -5,6 +5,7 @@
 		<link href="toc/style/github-bf51422f4bb36427d391e4b75a1daa083c2d840e.css" media="all" rel="stylesheet" type="text/css"/>
 		<link href="toc/style/github2-d731afd4f624c99a4b19ad69f3083cd6d02b81d5.css" media="all" rel="stylesheet" type="text/css"/>
 		<link href="toc/css/zTreeStyle/zTreeStyle.css" media="all" rel="stylesheet" type="text/css"/>
+		<link rel="icon" href="./img/logo.ico" type="image/x-icon"/>
 	  <style>
 		pre {
 		    counter-reset: line-numbering;
@@ -67,39 +68,65 @@
           	<article class='markdown-body'>
             	<h1 id="1-stindex-">1. STIndex 概览</h1>
 <h2 id="1-1-">1.1 简介</h2>
-<p>STIndex提供了一种开箱即用的时空索引. 目前支持基于<strong>时间点</strong>及<strong>时间周期</strong>的时间索引. 其空间索引依赖于GeoIndex, 
+<p>STIndex提供了一种开箱即用的空间/时空索引. 目前支持基于<strong>时间点</strong>及<strong>时间周期</strong>的时间索引. 其空间索引依赖于GeoIndex, 
 GeoIndex提供了基于<a href="http://webpages.sou.edu/~sahrk/sqspc/pubs/gdggs03.pdf">离散全球网格</a>(discrete global grid, DGG)的空间索引, 底层由空间填充曲线(Space-filling curve, SFC)及<a href="https://uber.github.io/h3/#/">H3地理空间索引系统</a>(H3 geospatial indexing system)提供支持. GeoIndex重点关注二维的平面空间索引(即对经纬度的索引), 因为几乎没有日常应用会关注高程值. 虽然H3只支持平面索引, 但是GeoIndex实现的底层空间填充曲线支持任意维度的索引. GeoIndex主要提供了以下功能:</p>
-<ul>
+<ol>
 <li>给定一个经纬度点, 获取指定索引类型及分辨率下的索引值;</li>
 <li>给定索引值及其对应的索引类型和分辨率, 获取其对应的经纬度边界范围, 或其中心点;</li>
-<li>给定一个经纬度边界范围, 获取其对应的索引值区间;</li>
-<li>给定索引值及其对应的索引类型和分辨率, 获取其父层级的索引值;</li>
-<li>给定索引值及其对应的索引类型和分辨率, 获取其子层级的索引值区间;</li>
-<li>给定索引值及其对应的索引类型和分辨率, 获取其邻居空间单元的索引值.</li>
-</ul>
+<li>给定一个经纬度边界范围, 获取其对应的索引区间集合;</li>
+<li>给定索引值或区间及其对应的索引类型和分辨率, 获取其父层级的索引区间;</li>
+<li>给定索引值或区间及其对应的索引类型和分辨率, 获取其邻居空间单元的索引区间.</li>
+</ol>
 <p>此外, 值的说明的是, GeoIndex本身由Java语言实现了一个完整的、支持任意维度索引的空间填充曲线库, 而其对H3的支持只是封装了Uber官方给出的<a href="https://github.com/uber/h3-java">Java Binding</a>.</p>
+<p>STIndex本质上是一种降维编码方案, 它首先基于一定的时空粒度和剖分框架对时间和空间维度进行剖分, 形成一个个时空单元, 再采用一定的方法对时空单元进行一维编码. 该编码尽可能地将邻近的时空单元亦做邻近表达. 理论上可将时空维度视为一个多维空间进行统一的剖分和编码, 然而时间维度和空间维度存在巨大的差异(例如时间是无界且延续的, 而空间显然是有界的), 直接对其进行统一编码在实践中存在诸多问题. STIndex对时间和空间分别进行剖分和编码, 然后以一定的方式进行串接, 最终以串接得到的一维编码表示时空单元.</p>
 <h2 id="1-2-">1.2 用例</h2>
-<p>Updating...</p>
+<p>STIndex可用于分析型的时空数据库, 普遍的方案是将STIndex的编码值作为键, 其对应的值即为该编码对应时空单元内的时空数据. 目前基于键值对存储的数据库(如Redis, HBase, Accumulo, Cassandra, 它们都是基于SSTable和LMS存储引擎的)都可利用STIndex将时空查询转化为多区间查询, STIndex将给定的时空查询尽可能地转化为数量少的区间查询, 以减少随机IO的次数.</p>
+<p>此外, STIndex可以方便地转化为任意形式的字符串编码(尽管目前的字符串编码仅是二进制编码的十六进制表示), 以便用于社交媒体数据的Hashtag, <a href="">STCode</a>便是这样一种方法, 它将经度/纬度/时间用类似GeoHash的方法进行编码. 实际上STIndex完全可以取代STCode, 且提供了更加灵活的时空编码方式.</p>
 <h1 id="2-">2. 时空索引</h1>
 <h2 id="2-1-">2.1 基本概念</h2>
-<p>Updating...</p>
-<h2 id="2-2-">2.2 时间索引</h2>
-<p>Updating...</p>
-<h2 id="2-3-">2.3 空间索引</h2>
-<h3 id="2-3-1-">2.3.1 空间填充曲线</h3>
-<p>空间填充曲线是一种基于矩形网格的、递归四叉剖分的空间索引. 理论上, 空间填充曲线可以对任意维的数据进行索引, STIndex所实现的空间填充曲线库本身也支持任意维度的索引. 但是直接将时间或高程等维度用空间填充曲线进行索引需要额外的研究, 因此STIndex只利用空间填充曲线对经纬度进行索引. 目前, STIndex已经完整实现了Z-Order曲线及Hilbert曲线, 后续将添加对XZ-Order曲线的支持.</p>
-<p>Z-Order曲线及Hilbert曲线的剖分方式如图1所示. 现有的研究表明, Hilbert曲线的性能优于Z-Order曲线, Z-Order曲线的优势是实现简单.</p>
 <p><table></p>
 <p><tr></p>
-<p><td style="width: 350px;"><img src="./img/zorder.png"></td>
+<p><td style="width: 550px;"><img src="./img/hilbert_level.png"></td></p>
+<p><td style="width: 250px;"><img src="./img/st_cell.png"></td>
 </tr></p>
+<p><tr>
+</table></p>
+<p><table style="width: 100%;" width="100%"></p>
 <p><tr></p>
-<p><td style="width: 350px;"><img src="./img/hilbert.png"></td>
+<p><td style="width: 550px;"><span style="font-size: 10pt;"><i><span style="font-weight: 400;">图1. 具有层次关系的Hilbert曲线((a), (b), (c))对应的层级依次为1, 2, 3)</span></i></span></td></p>
+<p><td style="width: 250px;"><span style="font-size: 10pt;"><i><span style="font-weight: 400;">图2. 时空单元</span></i></span></td> 
+</tr></p>
+<table>
+
+<ul>
+<li><strong>分辨率:</strong> 时间和空间剖分都需要指定分辨率. 时间分辨率指剖分的最小时间粒度, 通常为年, 月, 日, 时, 分, 秒中的一种; 空间分辨率指离散全球网格剖分的层次, 如图1中的Hilbert曲线其分辨率分别为1, 2, 3.</li>
+<li><strong>索引值:</strong> 指对时空单元进行一维编码后得到的值, 在STIndex中用二进制数组表示, 可对其进行适当的编码.</li>
+<li><strong>索引区间:</strong> 指一维编码上的一个区间, 对应时空邻近的时空单元.</li>
+<li><strong>空间单元:</strong> 指由离散全球网格划分得到的单元. 在空间填充曲线中为矩形, 在H3中为六边形.</li>
+<li><strong>父空间单元:</strong> </li>
+<li><strong>子空间单元:</strong></li>
+<li><strong>时空单元:</strong> 指经过时间和空间剖分后得到的最小单元, 与索引值一一对应.</li>
+</ul>
+<h2 id="2-2-">2.2 时间索引</h2>
+<p>由于时间的一维性, 不需要对其进行降维编码, 只需要考虑以何种形式与空间编码进行串接. STIndex提供了两种形式的时间编码:</p>
+<ol>
+<li>时间点编码: 适用于时间点的查询, 一般用于在线查询场景. 时间点并非指时间维度上的一个点, 它与编码选取的最小时间粒度有关, 例如在以年为最小粒度的编码中, 2020年即为一个时间点, 在以月为最小粒度的编码中, 2020年1月即为一个时间点, 以此类推. 时间点编码将直接与空间编码串接.</li>
+<li>时间周期编码: 适用于在时间上具有周期性特征的查询, 更多的用于分析性的场景, 如查询</li>
+</ol>
+<h2 id="2-3-">2.3 空间索引</h2>
+<h3 id="2-3-1-">2.3.1 空间填充曲线</h3>
+<p>空间填充曲线是一种基于矩形网格的、递归四叉剖分的空间索引. 理论上, 空间填充曲线可以对任意维的数据进行索引, STIndex所实现的空间填充曲线库本身也支持任意维度的索引. 但是直接将时间或高程等维度用空间填充曲线进行索引需要额外的研究, 因此STIndex只利用空间填充曲线对经纬度进行索引. 目前, STIndex已经完整实现了Z-order曲线及Hilbert曲线, 后续将添加对XZ-order曲线的支持.</p>
+<p>Z-order曲线及Hilbert曲线的剖分方式如图1所示. 现有的<a href="https://pdf.sciencedirectassets.com/271512/1-s2.0-S0925772109X00088/1-s2.0-S0925772109000765/main.pdf?X-Amz-Security-Token=IQoJb3JpZ2luX2VjEBwaCXVzLWVhc3QtMSJHMEUCIAKiJUMg0Xg8q3pgCAGtVsgP6v3Rz%2BR9aY09jlW3PlaNAiEA3D%2BWVk1TDrcXfQHYZhhQwHl%2FjA2rfM%2BIXbFqA3%2B%2F09IqvQMItP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARACGgwwNTkwMDM1NDY4NjUiDB8qudgJaD7ZwWPC8iqRA1XuD3IIFYf4WfifcUQEnzJGquODEIdTJRvtyZegRtXGT99x1DyCl6Sb7b%2B6zAMgDwkvYT2UtzKmp%2B5PLIz6bfq0p0KbDHkIKgJV13MkmglTQ9HERJNJ035EzPXwbJYv2pNqIIh2YtjRVt%2FD8%2B7LBQAD9cFXQlZt9VuzMai1nUfrPVRTnTxa7KRm0LaYhh28nzkx0s4CUQPI9o1EdZs8J7%2BB9gpKttWOQKwBf1ladmpGySkwYDcBspLoWZPl7qSzyUzYv7a0KxLD7sIB0snx8%2BJmjYx4HKAwZlC%2Bz1wu2ejKNsvD2G23blBbv6g4y4AmAIkVAsV0RCNB4Y6B%2BzHMvuEzSSgUNCzVoBO%2FrftQPGIEepc1jAgVLQMHHzuaN9734ME5%2BRD3vOHOBNBhKyoK1jl9aoNp98QocydTQm3QC9u63AMb9Lngwvbv919HyrqVBMigLgvan%2FzeNKNPEoSh2RnbaCrOEBVPKv%2B4Sm%2BYXUJf52YA2zVPBCdwZdD9JtU3inH22Gd9XlUb8IqStckiWjEcMNLKvvEFOusBhB9f%2FX1A4ip%2FJfVSf9MZ7DJaucRqcqUcSo5E7Q075qttLKQ6GPRrdbTh2xOpcHs9%2FdSs6X0z%2F%2F9CHwHFI6vUNyGjrGkxCxSuGlRy1Cv%2FpYSxqjqSGxrzKRFiqLQVUZr2exyMAWnTAXe2iGClqC5OP1aa%2BBzi02xjb8fimW3ov4TsLS55t255AP13JBjKIZONnNQLHNojQ%2FdqOeWPSn4kqd8x%2Fw5ZzLQ7zw1b60ZPbX1fSTbRTK17STx4iPnoKuw6YxffhWZOyu%2Bh3tsQ59N3CW4pXZEPLAsVLOXfaXK3niV8NP77dDIGVGVB4A%3D%3D&amp;X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Date=20200128T042503Z&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Expires=299&amp;X-Amz-Credential=ASIAQ3PHCVTY7HAH7WDH%2F20200128%2Fus-east-1%2Fs3%2Faws4_request&amp;X-Amz-Signature=e3859c5366becdfef632a491672a5f466d2d94076c65270a4b58f4b1f8228a76&amp;hash=2f66d11befdccb251a1f2c545de31399cb27736507cf05392ba8d914f5e3abfc&amp;host=68042c943591013ac2b2430a89b270f6af2c76d8dfd086a07176afe7c76c2c61&amp;pii=S0925772109000765&amp;tid=spdf-835e2205-9bde-43db-bc14-4d6239796533&amp;sid=da881e5b4aee3143140983646510fe377fc3gxrqa&amp;type=client">研究</a>表明, Hilbert曲线的性能优于Z-order曲线, Z-order曲线的优势是实现简单. 此外, 由于Z-order曲线的编码值是通过交错各维度坐标值的二进制表示来计算, 因此各维度的精度必须一致.</p>
+<p><table></p>
+<p><tr></p>
+<p><td style="width: 400px;"><img src="./img/zorder.png"></td></p>
+<p><td style="width: 400px;"><img src="./img/hilbert.png"></td>
 </tr>
 </table></p>
 <p><table style="height: 57px; width: 100%;" width="100%"></p>
 <p><tr></p>
-<p><td style="width: 601.016px;"><span style="font-size: 10pt;"><i><span style="font-weight: 400;">图1. Z-Order曲线(上), Hilbert曲线(下)</span></i></span></td> 
+<p><td style="width: 400px;"><span style="font-size: 10pt;"><i><span style="font-weight: 400;">图3. Z-order曲线</span></i></span></td> </p>
+<p><td style="width: 400px;"><span style="font-size: 10pt;"><i><span style="font-weight: 400;">图4. Hilbert曲线</span></i></span></td> 
 </tr></p>
 <table>
 
@@ -138,6 +165,10 @@ H3索引编码由64位的整型表示, 这里仅讲述单元索引的排列, 具
 </ul>
 <h1 id="3-api-">3. API 参考</h1>
 <p>Updating...</p>
+<p><br>
+<br>
+© Copyright 2020 <a href="https://github.com/STDI-Sys">STDI Sys</a>, <a href="https://lb-yu.github.io">Liebing Yu</a><br>
+Licensed under the <a href="https://opensource.org/licenses/apache2.0.php">Apache License, Version 2.0</a></p>
 
           	</article>
         </div>
